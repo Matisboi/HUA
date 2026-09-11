@@ -187,12 +187,12 @@ local TOKENIZER_CONFIG = {
   -- an O(1) lookup against this table. If the word is found here, its token type
   -- is changed from "Identifier" to "Keyword".
   KEYWORDS = createLookupTable({
-    "and",      "break", "do",    "else",
-    "elseif",   "end",   "false", "for",
-    "function", "if",    "in",    "local",
-    "nil",      "not",   "or",    "repeat",
-    "return",   "then",  "true",  "until",
-    "while"
+    "és",      "tör", "csináld",    "különben",
+    "különbenha",   "vég",   "hamis", "mindegyik",
+    "funkció", "ha",    "ban",    "lokál",
+    "nil",      "not",   "or",    "folyamatos",
+    "vissza",   "akkor",  "igaz",  "amíg",
+    "míg" -- while
   })
 }
 
