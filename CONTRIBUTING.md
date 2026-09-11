@@ -1,3 +1,5 @@
+This is for TLC.. I feel like this should be mentioned.. SO HERE THEY ARE, THANK YOU ALL FOR MAKING TLC :D
+
 # Contributing to Tiny Lua Compiler (TLC)
 
 Thanks for your interest in contributing.
