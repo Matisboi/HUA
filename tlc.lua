@@ -292,7 +292,7 @@ function Tokenizer:consumeIdentifier()
   -- The initial character has already been verified to be a
   -- valid identifier start. Match any subsequent characters
   -- that are valid followers (letters, digits, underscores).
-  local startPos, endPos = string.find(self.code, "^[0-9a-zA-Z_]*", self.curCharPos)
+  local startPos, endPos = string.find(self.code, "^[0-9a-zA-ZáéíóöőúüűÁÉÍÓÖŐÚÜŰ_]*", self.curCharPos)
   self:setCurrentPosition(endPos + 1)
   return self.code:sub(startPos, endPos)
 end
@@ -791,14 +791,14 @@ local PARSER_CONFIG = {
   -- Keywords that signal the end of a block. When the parser sees one of
   -- these, it stops parsing statements in the current block and returns
   -- control to the caller that owns that keyword.
-  TERMINATION_KEYWORDS = createLookupTable({ "end", "else", "elseif", "until" }),
+  TERMINATION_KEYWORDS = createLookupTable({ "vég", "különben", "különbenha", "amíg" }),
 
   UNARY_OPERATORS  = createLookupTable({ "-", "#", "not" }),
   BINARY_OPERATORS = createLookupTable({
     "+",  "-",   "*",  "/",
     "%",  "^",   "..", "==",
     "~=", "<",   ">",  "<=",
-    ">=", "and", "or"
+    ">=", "és", "vagy"
   })
 }
 
@@ -825,15 +825,15 @@ function Parser.new(tokens)
   -- parsing functions. This allows the main statement parsing loop to quickly
   -- dispatch to the correct parser based on the current token.
   self.statementHandlers = {
-    ["do"]       = self.parseDoStatement,
-    ["break"]    = self.parseBreakStatement,
-    ["for"]      = self.parseForStatement,
-    ["function"] = self.parseFunctionDeclaration,
-    ["if"]       = self.parseIfStatement,
-    ["local"]    = self.parseLocalStatement,
-    ["repeat"]   = self.parseRepeatStatement,
-    ["return"]   = self.parseReturnStatement,
-    ["while"]    = self.parseWhileStatement
+    ["csináld"]       = self.parseDoStatement,
+    ["tör"]    = self.parseBreakStatement,
+    ["mindegyik"]      = self.parseForStatement,
+    ["funkció"] = self.parseFunctionDeclaration,
+    ["ha"]       = self.parseIfStatement,
+    ["lokál"]    = self.parseLocalStatement,
+    ["folyamatos"]   = self.parseRepeatStatement,
+    ["vissza"]   = self.parseReturnStatement,
+    ["míg"]    = self.parseWhileStatement
   }
 
   return self
@@ -955,7 +955,7 @@ end
 function Parser:parseFunctionExpression()
   local parameters, isVararg = self:parseParameterList()
   local body = self:parseCodeBlock()
-  self:expectKeyword("end")
+  self:expectKeyword("vég")
   return { kind = "FunctionExpression",
     body       = body,
     parameters = parameters,
@@ -967,7 +967,7 @@ end
 function Parser:parseIfClause(keyword)
   self:expectKeyword(keyword) -- "if" / "elseif"
   local condition = self:expectExpression()
-  self:expectKeyword("then")
+  self:expectKeyword("akkor")
   local body = self:parseCodeBlock()
   return { kind = "IfClause",
     condition = condition,
@@ -980,9 +980,9 @@ end
 -- Used as a utility parser for every statement that opens a `do ... end` block
 -- (e.g., `while`, `for`, and standalone `do` statements).
 function Parser:parseDoEndLoopBlock()
-  self:expectKeyword("do")
+  self:expectKeyword("csináld")
   local body = self:parseCodeBlock()
-  self:expectKeyword("end")
+  self:expectKeyword("vég")
   return body
 end
 
@@ -1283,12 +1283,12 @@ function Parser:parsePrimaryExpression()
     if keyword == "nil" then
       self:advance(1)
       return { kind = "NilLiteral" }
-    elseif keyword == "true" or keyword == "false" then
+    elseif keyword == "igaz" or keyword == "hamis" then
       self:advance(1)
-      return { kind = "BooleanLiteral", value = (keyword == "true") }
+      return { kind = "BooleanLiteral", value = (keyword == "igaz") }
 
     -- Anonymous function, e.g., `function(arg1) ... end`.
-    elseif keyword == "function" then
+    elseif keyword == "funkció" then
       self:advance(1)
       return self:parseFunctionExpression()
     end
@@ -1494,10 +1494,10 @@ end
 --
 -- Handles both 'local var = value' and 'local function name() end' forms.
 function Parser:parseLocalStatement()
-  self:expectKeyword("local")
+  self:expectKeyword("lokál")
 
   if self:isKeyword("function") then
-    self:expectKeyword("function")
+    self:expectKeyword("funkció")
 
     -- Unlike non-local function declarations (which desugar to assignments),
     -- local function declarations require special handling to support recursion.
@@ -1526,7 +1526,7 @@ function Parser:parseLocalStatement()
 end
 
 function Parser:parseWhileStatement()
-  self:expectKeyword("while")
+  self:expectKeyword("míg")
 
   return { kind = "WhileStatement",
     condition = self:expectExpression(),
@@ -1535,9 +1535,9 @@ function Parser:parseWhileStatement()
 end
 
 function Parser:parseRepeatStatement()
-  self:expectKeyword("repeat")
+  self:expectKeyword("folyamatos")
   local body = self:parseCodeBlock()
-  self:expectKeyword("until")
+  self:expectKeyword("amíg")
 
   return { kind = "RepeatStatement",
     body      = body,
@@ -1550,14 +1550,14 @@ function Parser:parseDoStatement()
 end
 
 function Parser:parseReturnStatement()
-  self:expectKeyword("return")
+  self:expectKeyword("vissza")
   local expressions = self:parseExpressionList()
   self.shouldTerminateBlock = true
   return { kind = "ReturnStatement", expressions = expressions }
 end
 
 function Parser:parseBreakStatement()
-  self:expectKeyword("break")
+  self:expectKeyword("tör")
   self.shouldTerminateBlock = true
   return { kind = "BreakStatement" }
 end
@@ -1565,16 +1565,16 @@ end
 function Parser:parseIfStatement()
   -- Parse the first `if` clause, then any number of `elseif` clauses.
   -- The optional `else` body is stored separately because it has no condition.
-  local clauses = { self:parseIfClause("if") }
+  local clauses = { self:parseIfClause("ha") }
   while self:isKeyword("elseif") do
-    table.insert(clauses, self:parseIfClause("elseif"))
+    table.insert(clauses, self:parseIfClause("különbenha"))
   end
   local elseClause
   if self:isKeyword("else") then
-    self:expectKeyword("else")
+    self:expectKeyword("különben")
     elseClause = self:parseCodeBlock()
   end
-  self:expectKeyword("end")
+  self:expectKeyword("vég")
   return { kind = "IfStatement",
     clauses    = clauses,
     elseClause = elseClause
@@ -1582,7 +1582,7 @@ function Parser:parseIfStatement()
 end
 
 function Parser:parseForStatement()
-  self:expectKeyword("for")
+  self:expectKeyword("mindegyik")
   local variableName = self:expectIdentifier()
 
   -- At this point, we must distinguish which form of `for` loop we're parsing.
@@ -1595,7 +1595,7 @@ function Parser:parseForStatement()
     while self:advanceIfMatch("Comma") do
       table.insert(iteratorVariables, self:expectIdentifier())
     end
-    self:expectKeyword("in")
+    self:expectKeyword("ban")
     return { kind = "ForGenericStatement",
       iterators   = iteratorVariables,
       expressions = self:expectOneOrMoreExpressions(),
@@ -1633,7 +1633,7 @@ end
 --
 -- Desugars into an assignment statement for consistency.
 function Parser:parseFunctionDeclaration()
-  self:expectKeyword("function")
+  self:expectKeyword("funkció")
 
   -- Parse the base function name (e.g., `myFunc` in `myFunc.new`).
   local base = { kind = "Identifier", value = self:expectIdentifier() }
@@ -4685,6 +4685,14 @@ return {
   --       Tiny Lua Compiler
   --          MIT License
 
+  -- ██╗ ██╗   ██╗  ██╗    ███╗
+  -- ██║ ██║   ██║  ██║   ██║██╗
+  -- ██████║   ██║  ██║  ██╔╝ ██╗
+  -- ██║ ██║   ██║  ██║  ███████║
+  -- ██║ ██║   ╚█████╔╝  ██║  ██║
+  -- ╚═╝ ╚═╝    ╚════╝   ╚═╝  ╚═╝
+  --    HUA a Hungarianized Lua compiler, based on TLC (Tiny Lua Compiler)
+  --                            Also MIT License
   -- Raw components (classes)
   Tokenizer       = Tokenizer,
   Parser          = Parser,
