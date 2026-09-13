@@ -12,19 +12,19 @@ Create a .hua file.. or anything with valid syntax!!!
 and then.. compile.. its bassically the same as tlc.. you just hand over a different file instead
 
 ### VALID SYNTAXES
-if -> ha
-else -> különben
-elseif -> különbenha
-while -> **míg**
-until -> **amíg**
-for -> mindegyik
-do -> csináld
-local -> lokál
-repeat -> folyamatos
-break -> tör
-end -> vég
-then -> akkor
-and -> és
+if -> ha,
+else -> különben,
+elseif -> különbenha,
+while -> **míg**,
+until -> **amíg**,
+for -> mindegyik,
+do -> csináld,
+local -> lokál,
+repeat -> folyamatos,
+break -> tör,
+end -> vég,
+then -> akkor,
+and -> és,
 or -> vagy
 
 ## AND THAT'S IT!!!
